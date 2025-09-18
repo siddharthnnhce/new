@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import emailjs from 'emailjs-com';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -8,6 +9,19 @@ const Contact = () => {
     phone: "",
     message: ""
   });
+  const [notification, setNotification] = useState({ show: false, type: '', message: '' });
+
+  // EmailJS credentials - replace with your actual IDs
+  const SERVICE_ID = "service_ovhjm0d";
+  const TEMPLATE_ID = "template_vs4j3bx";
+  const PUBLIC_KEY = "tHbUnPkRA-9DYDN3r";
+
+  const showNotification = (type, message) => {
+    setNotification({ show: true, type, message });
+    setTimeout(() => {
+      setNotification({ show: false, type: '', message: '' });
+    }, 5000);
+  };
 
   const handleChange = (e) => {
     setFormData({
@@ -18,13 +32,89 @@ const Contact = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log("Form submitted:", formData);
-    // You can add your form submission logic here
+    
+    // Check if EmailJS credentials are available
+    if (!SERVICE_ID || !TEMPLATE_ID || !PUBLIC_KEY) {
+      showNotification('error', 'Configuration error. Please try again later.');
+      return;
+    }
+    
+    // Prepare template parameters according to your EmailJS template structure
+    const templateParams = {
+      title: "New Contact Form Submission",
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      message: formData.message,
+      reply_to: formData.email // This ensures replies go to the user's email
+    };
+
+    // Send email using EmailJS
+    emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY)
+      .then((result) => {
+        console.log('Email successfully sent!', result.text);
+        // Reset form after successful submission
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          message: ""
+        });
+        // Show success message to user
+        showNotification('success', 'Message sent successfully! We will get back to you soon.');
+      }, (error) => {
+        console.log('Failed to send email:', error.text);
+        // Show error message to user
+        showNotification('error', 'Failed to send message. Please try again or contact us directly.');
+      });
   };
 
   return (
-    <section id="contact" className="min-h-screen bg-[#2a1a05] flex items-center justify-center p-8 py-16">
+    <section id="contact" className="min-h-screen bg-[#2a1a05] flex items-center justify-center p-8 py-16 relative">
+      {/* Notification Toast */}
+      {notification.show && (
+        <motion.div
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -50 }}
+          className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-md ${
+            notification.type === 'success' 
+              ? 'bg-green-600 text-white' 
+              : 'bg-red-600 text-white'
+          }`}
+        >
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              {notification.type === 'success' ? (
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              )}
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium">
+                {notification.message}
+              </p>
+            </div>
+            <div className="ml-auto pl-3">
+              <button
+                onClick={() => setNotification({ show: false, type: '', message: '' })}
+                className="inline-flex rounded-md p-1.5 hover:bg-opacity-25 focus:outline-none"
+                aria-label="Close notification"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       <div className="max-w-6xl w-full">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -63,8 +153,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <h4 className="text-lg font-semibold text-[#e6dcc5]">Address</h4>
-                    <p className="text-[#c9b178]">123 Woodcraft Avenue</p>
-                    <p className="text-[#c9b178]">Bengaluru, Karnataka 560001</p>
+                    <p className="text-[#c9b178]">Sy NO 3/5, Venkateshapura village, Yalahanka hobli, Jakkur Post, Banglore-560064</p>
                   </div>
                 </div>
 
@@ -76,8 +165,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <h4 className="text-lg font-semibold text-[#e6dcc5]">Phone</h4>
-                    <p className="text-[#c9b178]">+91 98765 43210</p>
-                    <p className="text-[#c9b178]">+91 91234 56789</p>
+                    <p className="text-[#c9b178]">+91 9886656271</p>
                   </div>
                 </div>
 
@@ -89,8 +177,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <h4 className="text-lg font-semibold text-[#e6dcc5]">Email</h4>
-                    <p className="text-[#c9b178]">info@greenwoods.com</p>
-                    <p className="text-[#c9b178]">sales@greenwoods.com</p>
+                    <p className="text-[#c9b178]">msbros@hotmail.co.in</p>
                   </div>
                 </div>
 
@@ -106,25 +193,6 @@ const Contact = () => {
                     <p className="text-[#c9b178]">Sunday: Closed</p>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Social Media */}
-            <div>
-              <h4 className="text-xl font-serif text-[#e6dcc5] mb-4">Follow Us</h4>
-              <div className="flex space-x-4">
-                {['Facebook', 'Instagram', 'Twitter', 'LinkedIn'].map((social) => (
-                  <motion.a
-                    key={social}
-                    href="#"
-                    whileHover={{ scale: 1.1, y: -2 }}
-                    className="bg-[#3a2708] p-3 rounded-full text-[#c9b178] hover:bg-[#4a3718] transition-colors duration-300"
-                    aria-label={social}
-                  >
-                    <span className="sr-only">{social}</span>
-                    <div className="w-5 h-5 bg-current rounded"></div>
-                  </motion.a>
-                ))}
               </div>
             </div>
           </motion.div>
@@ -223,8 +291,15 @@ const Contact = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                <p className="text-lg">Interactive map would be displayed here</p>
-                <p className="text-sm opacity-75 mt-2">123 Woodcraft Avenue, Bengaluru</p>
+                <a 
+                  href="https://maps.app.goo.gl/Lu84synEwu7kjNqp6?g_st=iw" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center bg-[#3a2708] hover:bg-[#4a3718] text-[#c9b178] hover:text-[#e6dcc5] px-4 py-2 rounded-lg transition-colors duration-300"
+                >
+                  Open in Google Maps
+                </a>
+                <p className="text-sm opacity-75 mt-2">Sy NO 3/5, Venkateshapura village, Yalahanka hobli, Jakkur Post, Banglore-560064</p>
               </div>
             </div>
           </div>
